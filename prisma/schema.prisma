@@ -51,9 +51,9 @@ model Product {
   title       String
   slug        String   @unique
   kind        String   // physical | digital | service
-  price       Int      // in cents
+  price       Int      // cents
   commission  Int      // commission in cents for affiliate
-  stock       Int?     // optional for physical
+  stock       Int?
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -81,10 +81,10 @@ model Order {
   buyerId     String?
   buyer       User?        @relation("BuyerOrders", fields: [buyerId], references: [id])
   status      OrderStatus  @default(PENDING)
-  total       Int          // in cents
+  total       Int          // cents
   feeSeller   Int          // 5% from seller
   feePlatform Int          // 10% of affiliate commission (if any)
-  escrowHold  Int          // amount held in escrow
+  escrowHold  Int
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
@@ -100,7 +100,7 @@ model OrderItem {
   productId  String
   product    Product  @relation(fields: [productId], references: [id])
   qty        Int      @default(1)
-  price      Int      // snapshot price
+  price      Int      // snapshot price (cents)
   createdAt  DateTime @default(now())
 }
 
@@ -110,7 +110,7 @@ model Commission {
   order           Order          @relation(fields: [orderId], references: [id])
   affiliateLinkId String?
   affiliateLink   AffiliateLink? @relation(fields: [affiliateLinkId], references: [id])
-  amountGross     Int            // commission before platform fee
+  amountGross     Int            // before platform fee
   platformFee     Int            // 10% dari komisi afiliator
   amountNet       Int            // after fee
   createdAt       DateTime       @default(now())
@@ -123,8 +123,8 @@ model Payout {
   orderId     String?      @unique
   order       Order?       @relation(fields: [orderId], references: [id])
   status      PayoutStatus @default(QUEUED)
-  amount      Int          // in cents
-  method      String?      // e-wallet/bank/qris settle
+  amount      Int
+  method      String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
@@ -145,10 +145,10 @@ model AdCampaign {
   productId   String?
   product     Product? @relation(fields: [productId], references: [id])
   provider    String   // meta | tiktok | google
-  budget      Int      // in cents
+  budget      Int      // cents
   spend       Int      @default(0)
   status      String   @default("draft")
-  extId       String?  // external campaign id
+  extId       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
