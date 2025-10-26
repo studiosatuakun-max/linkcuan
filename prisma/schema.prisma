@@ -1,0 +1,154 @@
+﻿generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  guest
+  seller
+  affiliate
+  admin
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FULFILLED
+  CANCELLED
+  REFUNDED
+}
+
+enum PayoutStatus {
+  QUEUED
+  PROCESSING
+  PAID
+  FAILED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String?  @unique
+  role      Role     @default(guest)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products  Product[]
+  orders    Order[]        @relation("BuyerOrders")
+  links     AffiliateLink[]
+  payouts   Payout[]
+  referrals Referral[]     @relation("Referrer")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  sellerId    String
+  seller      User     @relation(fields: [sellerId], references: [id])
+  title       String
+  slug        String   @unique
+  kind        String   // physical | digital | service
+  price       Int      // in cents
+  commission  Int      // commission in cents for affiliate
+  stock       Int?     // optional for physical
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orderItems  OrderItem[]
+  links       AffiliateLink[]
+}
+
+model AffiliateLink {
+  id          String   @id @default(cuid())
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  code        String   @unique
+  clicks      Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  commissions Commission[]
+}
+
+model Order {
+  id          String       @id @default(cuid())
+  buyerId     String?
+  buyer       User?        @relation("BuyerOrders", fields: [buyerId], references: [id])
+  status      OrderStatus  @default(PENDING)
+  total       Int          // in cents
+  feeSeller   Int          // 5% from seller
+  feePlatform Int          // 10% of affiliate commission (if any)
+  escrowHold  Int          // amount held in escrow
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  items       OrderItem[]
+  commission  Commission?
+  payout      Payout?
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  qty        Int      @default(1)
+  price      Int      // snapshot price
+  createdAt  DateTime @default(now())
+}
+
+model Commission {
+  id              String         @id @default(cuid())
+  orderId         String         @unique
+  order           Order          @relation(fields: [orderId], references: [id])
+  affiliateLinkId String?
+  affiliateLink   AffiliateLink? @relation(fields: [affiliateLinkId], references: [id])
+  amountGross     Int            // commission before platform fee
+  platformFee     Int            // 10% dari komisi afiliator
+  amountNet       Int            // after fee
+  createdAt       DateTime       @default(now())
+}
+
+model Payout {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  orderId     String?      @unique
+  order       Order?       @relation(fields: [orderId], references: [id])
+  status      PayoutStatus @default(QUEUED)
+  amount      Int          // in cents
+  method      String?      // e-wallet/bank/qris settle
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Referral {
+  id          String   @id @default(cuid())
+  referrerId  String
+  referrer    User     @relation("Referrer", fields: [referrerId], references: [id])
+  friendEmail String
+  claimed     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model AdCampaign {
+  id          String   @id @default(cuid())
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id])
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+  provider    String   // meta | tiktok | google
+  budget      Int      // in cents
+  spend       Int      @default(0)
+  status      String   @default("draft")
+  extId       String?  // external campaign id
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
