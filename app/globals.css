@@ -5,5 +5,15 @@
 html, body {
   @apply bg-bg text-text font-sans;
 }
-.container { @apply max-w-[1100px] mx-auto px-5; }
+.container { @apply max-w-[1100px] mx-auto px-4 md:px-5; }
 .btn { @apply inline-flex items-center justify-center rounded-xl bg-brand px-4 py-2 font-semibold text-bg hover:bg-brandHover transition; }
+
+.hero-gradient {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(50% 40% at 10% 10%, rgba(250, 204, 21, 0.15), transparent 60%),
+    radial-gradient(40% 30% at 90% 20%, rgba(34, 211, 238, 0.12), transparent 60%),
+    radial-gradient(60% 50% at 50% 80%, rgba(255, 255, 255, 0.06), transparent 60%);
+  filter: blur(10px);
+}
