@@ -25,7 +25,7 @@ export default function Hero() {
           </p>
 
           <div className='mt-6 flex flex-wrap gap-3'>
-            <Link href='/seller' className='btn'>
+            <Link href='/seller/create' className='btn'>
               Mulai sebagai Seller
             </Link>
             <Link
@@ -60,3 +60,4 @@ export default function Hero() {
     </section>
   );
 }
+
